@@ -26,8 +26,11 @@ public:
         Type type;
     };
 
+    std::string symbols[4] = {"+", "-", "*", "/"};
+
     std::optional <TokenList> tokenise (std::string input) const
     {
+
         auto type = findType (input);
         if (type == Type::unknown)
             return {};
@@ -56,16 +59,24 @@ private:
     
     std::optional <double> findAndExtractLHS (std::string input, std::string character) const
     {
-        if (auto pos = input.find (character); pos != std::string::npos)
-            return std::stod (input.substr (0, pos));
-            
+        if (auto pos = input.find (character); pos != std::string::npos) {
+            const std::string res = input.substr (0, pos-1);
+            if (res == "pi")
+                return 3.1415;
+            return std::stod (res);
+        }
+
         return {};
     }
     
     std::optional <double> findAndExtractRHS (std::string input, std::string character) const
     {
-        if (auto pos = input.find (character); pos != std::string::npos)
-            return std::stod (input.substr (pos + 1));
+        if (auto pos = input.find (character); pos != std::string::npos) {
+            const std::string res = input.substr (pos + 2);
+            if (res == "pi")
+                return 3.1415;
+            return std::stod (res);
+        }
             
         return {};
     }
@@ -82,37 +93,20 @@ private:
     
     std::optional <double> findLHS (std::string input) const
     {
-        if (auto result = findAndExtractLHS (input, "+"))
-            return result;
-            
-        if (auto result = findAndExtractLHS (input, "-"))
-            return result;
-            
-        if (auto result = findAndExtractLHS (input, "*"))
-            return result;
+        for (std::string symbol : symbols) {
+            if (auto result = findAndExtractLHS (input, symbol))
+                return result;
+        }
 
-        if (auto result = findAndExtractLHS (input, "/"))
-            return result;
-            
         return {};
     }
     
     std::optional <double> findRHS (std::string input) const
     {
-        if (input == "pi")
-            return 3.1415;
-
-        if (auto result = findAndExtractRHS (input, "+"))
-            return result;
-            
-        if (auto result = findAndExtractRHS (input, "-"))
-            return result;
-            
-        if (auto result = findAndExtractRHS (input, "*"))
-            return result;
-
-        if (auto result = findAndExtractRHS (input, "/"))
-            return result;
+        for (std::string symbol : symbols) {
+            if (auto result = findAndExtractRHS (input, symbol))
+                return result;
+        }
             
         return {};
     }
