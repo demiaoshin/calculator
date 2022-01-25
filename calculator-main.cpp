@@ -1,6 +1,5 @@
 #include <iostream>
-#include <sstream>
-#include <vector>
+#include <utility>
 #include <optional>
 #include <string>
 #include <cstdlib>
@@ -26,9 +25,10 @@ public:
         Type type;
     };
 
+    // all the operators stored in an array of strings
     std::string symbols[4] = {"+", "-", "*", "/"};
 
-    std::optional <TokenList> tokenise (std::string input) const
+    [[nodiscard]] std::optional <TokenList> tokenise (const std::string& input) const
     {
 
         auto type = findType (input);
@@ -43,7 +43,7 @@ public:
         if (! rhs.has_value ())
             return {};
     
-        TokenList tokens;
+        TokenList tokens{};
         tokens.lhs = *lhs;
         tokens.rhs = *rhs;
         tokens.type = type;
@@ -52,12 +52,12 @@ public:
     
 private:
 
-    bool find (std::string input, std::string character) const
+    [[nodiscard]] static bool find (const std::string& input, const std::string& character)
     {
         return input.find (character) != std::string::npos;
     }
     
-    std::optional <double> findAndExtractLHS (std::string input, std::string character) const
+    [[nodiscard]] static std::optional <double> findAndExtractLHS (const std::string& input, const std::string& character)
     {
         if (auto pos = input.find (character); pos != std::string::npos) {
             const std::string res = input.substr (0, pos-1);
@@ -69,7 +69,7 @@ private:
         return {};
     }
     
-    std::optional <double> findAndExtractRHS (std::string input, std::string character) const
+    [[nodiscard]] static std::optional <double> findAndExtractRHS (const std::string& input, const std::string& character)
     {
         if (auto pos = input.find (character); pos != std::string::npos) {
             const std::string res = input.substr (pos + 2);
@@ -81,7 +81,7 @@ private:
         return {};
     }
 
-    Type findType (std::string input) const
+    [[nodiscard]] static Type findType (const std::string& input)
     {
         if (find (input, "+")) return Type::add;
         if (find (input, "-")) return Type::subtract;
@@ -91,9 +91,9 @@ private:
         return Type::unknown;
     }
     
-    std::optional <double> findLHS (std::string input) const
+    [[nodiscard]] std::optional <double> findLHS (const std::string& input) const
     {
-        for (std::string symbol : symbols) {
+        for (const std::string& symbol : symbols) {
             if (auto result = findAndExtractLHS (input, symbol))
                 return result;
         }
@@ -101,9 +101,9 @@ private:
         return {};
     }
     
-    std::optional <double> findRHS (std::string input) const
+    [[nodiscard]] std::optional <double> findRHS (const std::string& input) const
     {
-        for (std::string symbol : symbols) {
+        for (const std::string& symbol : symbols) {
             if (auto result = findAndExtractRHS (input, symbol))
                 return result;
         }
@@ -119,7 +119,7 @@ public:
     Calculator () = default;
     ~Calculator () = default;
     
-    double calculate (Tokeniser::TokenList tokens) const
+    [[nodiscard]] static double calculate (Tokeniser::TokenList tokens)
     {
         switch (tokens.type)
         {
@@ -150,7 +150,7 @@ public:
     };
     
 
-    InputRequest requestInput () const
+    [[nodiscard]] static InputRequest requestInput ()
     {
         std::cout << "Please enter a calculation (Type Q to quit)" << std::endl;
         
@@ -167,10 +167,10 @@ public:
 
 private:
 
-    void processInput (std::string input) const
+    static void processInput (const std::string& input)
     {
         if (auto tokens = Tokeniser ().tokenise (input))
-            std::cout << "Answer: " << Calculator ().calculate (*tokens) << std::endl;
+            std::cout << "Answer: " << Calculator::calculate (*tokens) << std::endl;
         else
             std::cout << "There was an error in the input string, please try again..." << std::endl;
     }
@@ -206,15 +206,15 @@ void test ()
     ResultChecker::check (result->rhs, 4);
     assert (result->type == Tokeniser::Type::multiply);
 
-    ResultChecker::check (Calculator ().calculate ({ 10, 4, Tokeniser::Type::multiply }), 40);
-    ResultChecker::check (Calculator ().calculate ({ 25.3, 18.6, Tokeniser::Type::add }), 43.9);
-    ResultChecker::check (Calculator ().calculate ({ 3, 5.6, Tokeniser::Type::subtract }), 2.6);
+    ResultChecker::check (Calculator::calculate ({ 10, 4, Tokeniser::Type::multiply }), 40);
+    ResultChecker::check (Calculator::calculate ({ 25.3, 18.6, Tokeniser::Type::add }), 43.9);
+    ResultChecker::check (Calculator::calculate ({ 3, 5.6, Tokeniser::Type::subtract }), 2.6);
+    ResultChecker::check (Calculator::calculate ({3.1415, 5, Tokeniser::Type::multiply }), 2.6);
 }
 
 void run ()
 {
-    InputProcessor processor;
-    while (processor.requestInput () == InputProcessor::InputRequest::continueProcessing);
+    while (InputProcessor::requestInput () == InputProcessor::InputRequest::continueProcessing);
 }
 
 int main (int argc, const char * argv[])
